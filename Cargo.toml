@@ -8,5 +8,5 @@ members = [
 
 [profile.release]
 lto = 'thin'
-codgen-units = 1
+codegen-units = 1
 strip = true
