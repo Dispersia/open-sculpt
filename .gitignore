@@ -1,0 +1,18 @@
+# Build Artifacts
+**/target
+**/dist
+**/build
+Cargo.lock
+
+# Configurations
+**/.idea
+*.iml
+**/.gradle
+**/.DS_Store
+
+# Android
+Android/local.properties
+Android/captures
+Android/.externalNativeBuild
+Android/.cxx
+

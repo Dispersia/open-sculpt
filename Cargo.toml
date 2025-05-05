@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/android",
+  "crates/core",
+  "crates/open-sculpt"
+]
+
+[profile.release]
+lto = 'thin'
+codgen-units = 1
+strip = true
