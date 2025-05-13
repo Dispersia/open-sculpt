@@ -1,12 +1,9 @@
 use std::{marker::PhantomData, sync::Arc};
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
 use winit::{application::ApplicationHandler, event::WindowEvent, window::Window};
 
 #[derive(Default)]
-pub struct App<E> {
+pub struct App<E: 'static> {
     state: Option<State>,
     _app_type: PhantomData<E>,
 }
@@ -29,7 +26,7 @@ struct State {
     surface_format: wgpu::TextureFormat,
 }
 
-impl<E: 'static> ApplicationHandler<E> for App<E> {
+impl<E> ApplicationHandler<E> for App<E> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         let window = Arc::new(
             event_loop
@@ -64,6 +61,7 @@ impl<E: 'static> ApplicationHandler<E> for App<E> {
             WindowEvent::Resized(size) => {
                 state.resize(size);
             }
+            WindowEvent::
             _ => (),
         }
     }
