@@ -1,24 +1,24 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::sync::Arc;
 
-use winit::{application::ApplicationHandler, event::WindowEvent, window::Window};
+use winit::{
+    application::ApplicationHandler,
+    event::WindowEvent,
+    window::{Window, WindowAttributes},
+};
 
 #[derive(Default)]
-pub struct App<E: 'static> {
+pub struct App {
     state: Option<State>,
-    _app_type: PhantomData<E>,
 }
 
-impl<E> App<E> {
+impl App {
     pub fn new() -> Self {
-        Self {
-            state: None,
-            _app_type: Default::default(),
-        }
+        Self { state: None }
     }
 }
 
 struct State {
-    window: Arc<Window>,
+    window: Arc<Box<dyn Window>>,
     device: wgpu::Device,
     queue: wgpu::Queue,
     size: winit::dpi::PhysicalSize<u32>,
@@ -26,27 +26,33 @@ struct State {
     surface_format: wgpu::TextureFormat,
 }
 
-impl<E> ApplicationHandler<E> for App<E> {
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+impl ApplicationHandler for App {
+    fn can_create_surfaces(&mut self, event_loop: &dyn winit::event_loop::ActiveEventLoop) {
         let window = Arc::new(
             event_loop
-                .create_window(Window::default_attributes().with_title("Open Sculpt"))
+                .create_window(WindowAttributes::default().with_title("Open Sculpt"))
                 .unwrap(),
         );
 
         let state = pollster::block_on(State::new(window.clone()));
         self.state = Some(state);
 
+        log::info!("Can Create Surfaces");
+
         window.request_redraw();
     }
 
     fn window_event(
         &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
+        event_loop: &dyn winit::event_loop::ActiveEventLoop,
         _window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
         let state = self.state.as_mut().unwrap();
+
+        if event != WindowEvent::RedrawRequested {
+            log::info!("EventToDo: {:#?}", event);
+        }
 
         match event {
             WindowEvent::CloseRequested => {
@@ -58,17 +64,16 @@ impl<E> ApplicationHandler<E> for App<E> {
 
                 state.get_window().request_redraw();
             }
-            WindowEvent::Resized(size) => {
+            WindowEvent::SurfaceResized(size) => {
                 state.resize(size);
             }
-            WindowEvent::
             _ => (),
         }
     }
 }
 
 impl State {
-    async fn new(window: Arc<Window>) -> State {
+    async fn new(window: Arc<Box<dyn Window>>) -> State {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions::default())
@@ -80,7 +85,7 @@ impl State {
             .await
             .unwrap();
 
-        let size = window.inner_size();
+        let size = window.surface_size();
 
         let surface = instance.create_surface(window.clone()).unwrap();
 
@@ -102,7 +107,7 @@ impl State {
         state
     }
 
-    fn get_window(&self) -> &Window {
+    fn get_window(&self) -> &Box<dyn Window> {
         &self.window
     }
 
@@ -151,6 +156,7 @@ impl State {
                     load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                     store: wgpu::StoreOp::Store,
                 },
+                depth_slice: None,
             })],
             depth_stencil_attachment: None,
             timestamp_writes: None,

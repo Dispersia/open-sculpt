@@ -12,7 +12,7 @@ core = { path = "../core" }
 
 android_logger = "0.15"
 log = "0.4"
-winit = { version = "0.30", features = [ "android-game-activity" ] }
+winit = { path = "../../../winit/winit", features = [ "android-game-activity" ] }
 
 [package.metadata.android]
 build_args = [ "armv7-linux-androideabi", "aarch64-linux-android" ]
