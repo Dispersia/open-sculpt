@@ -50,7 +50,10 @@ impl ApplicationHandler for App {
     ) {
         let state = self.state.as_mut().unwrap();
 
-        if event != WindowEvent::RedrawRequested {
+        if !matches!(
+            event,
+            WindowEvent::RedrawRequested // | WindowEvent::PointerMoved { .. }
+        ) {
             log::info!("EventToDo: {:#?}", event);
         }
 
